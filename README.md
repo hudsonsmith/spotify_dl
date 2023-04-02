@@ -44,10 +44,3 @@ python3 -m venv env
 .\env\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
-# spotify_dl
-# spotify_dl
-# spotify_dl
-# spotify_dl
-# spotify_dl
-# spotify_dl
-# spotify_dl

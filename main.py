@@ -1,38 +1,53 @@
-import requests
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+
+import json
 from bs4 import BeautifulSoup
+import requests
 import re
 from os import system
 import yt_dlp as youtube_dl 
-from os import system
 
-playlist_url: str = input("Spotify Playlist Url: ")
+spotify_username: str = input("Enter Spotify Username: ")
 
-song_html: str = requests.get(playlist_url)
-song_page = BeautifulSoup(song_html.text, "html.parser")
+scope: str = "user-library-read"
+sp: spotipy.Spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
+
+playlists = sp.user_playlists(spotify_username)
+playlist_uris: list = []
+
+while playlists:
+    for i, playlist in enumerate(playlists["items"], start=1):
+        print(f"{i}. {playlist['name']}")
+        playlist_uris.append(playlist["uri"])
+
+    if playlists["next"]:
+        playlists = sp.next(playlists)
+
+    else:
+        playlists = None
+
+
+playlist_uri: str = ""
+
+while True:
+    try:
+        selected_uri: int = int(input("Select a playlist to download: ")) - 1
+        playlist_uri = playlist_uris[selected_uri]
+
+        break
+
+    except (ValueError, IndexError):
+        print("Invalid option.")
+
+print(f"Selected Playlist: {playlist_uri}")
+playlist_items = sp.playlist_items(playlist_uri)
+
 
 songs: list = []
 
-
-# Get the songs.
-for song in song_page.find_all(attrs={"data-testid": "entity-row-v2-button"}):
-    song_text: str = song.text
-
-    # Get the number in the song to remove.
-    i: int = 0
-    char_found: bool = False
-
-    while char_found is False:
-        for char in song_text:
-            if char in "1234567890":
-                i += 1
-
-            else:
-                char_found = True
-
-    song_text = song_text[i:]
-
-    songs.append(song_text)
-
+for item in playlist_items["items"]:
+    songs.append(f"{item['track']['name']} \"{item['track']['album']['artists'][0]['name']}\"")
 
 headers: dict = {"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"}
 
